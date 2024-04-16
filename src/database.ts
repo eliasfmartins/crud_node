@@ -1,17 +1,13 @@
-import 'dotenv/config';
 import { knex as setupKnex, Knex} from 'knex';
+import { env } from './env';
 
 // npm i dotenv pacote pra ler o env dentro do node
-if(!process.env.DATABASE_URL){
-	throw new Error('faltando o .env');
-}
-console.log(process.env);
 
 
 export const config:Knex.Config ={
 	client:'sqlite', //tipo de banco de dados que sera utilizado
 	connection:{
-		filename: process.env.DATABASE_URL, //locale nome do arquivo de bd Nesse caso pegando isso da env
+		filename: env.DATABASE_URL, //locale nome do arquivo de bd Nesse caso pegando isso da env
 	},
 	useNullAsDefault:true, //o sql n suporta valores default por isso ese campo coloca por default null
 	migrations:{
