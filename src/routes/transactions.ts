@@ -1,6 +1,7 @@
+import { FastifyInstance } from 'fastify';
 import knex from 'knex';
 
-export function transactionsRoutes(app){
+export async function transactionsRoutes(app:FastifyInstance){
 	app.get('/hello', async ()=>{
 		const transaction = await knex('transactions').insert({
 			id:crypto.randomUUID(),
