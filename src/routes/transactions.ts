@@ -1,16 +1,17 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { knex } from '../database';
+import { randomUUID } from 'crypto';
 
-export async function transactionsRoutes(app:FastifyInstance){
-	app.get('/', async ()=>{
-		const transactions =  await knex('transactions').select();
-		return {transactions};
+export async function transactionsRoutes(app: FastifyInstance) {
+	app.get('/', async () => {
+		const transactions = await knex('transactions').select();
+		return { transactions };
 	});
 
-	app.get('/:id', async (request)=>{
+	app.get('/:id', async (request) => {
 		const getTransactionsParamsSchema = z.object({
-			id:z.string().uuid(),
+			id: z.string().uuid(),
 		});
 
 		const { id } = getTransactionsParamsSchema.parse(request.params);
@@ -18,25 +19,38 @@ export async function transactionsRoutes(app:FastifyInstance){
 		return { transaction };
 	});
 
-	app.post('/', async (request, reply)=>{
-		const createTransactionsBodySchema= z.object({
-			title: z.string(),
-			amount:z.number(),
-			type:z.enum(['credit', 'debit']),
-		});
-		const {title,amount,type} = createTransactionsBodySchema.parse(request.body);
+	app.get('/summary', async () => {
+		const summary = await knex('transactions').sum('amount',{ as: 'soma dos valores'}).first();
+		// methodo sum soma todos os valores de uma determinada coluna
+		return { summary };
+	});
 
+	app.post('/', async (request, reply) => {
+		const createTransactionsBodySchema = z.object({
+			title: z.string(),
+			amount: z.number(),
+			type: z.enum(['credit', 'debit']),
+		});
+		const { title, amount, type } = createTransactionsBodySchema.parse(
+			request.body
+		);
+
+		let sessionId = request.cookies.sessionId;
+		if(!sessionId){
+			sessionId =randomUUID();
+
+			reply.cookie('sessionId', sessionId, {
+				path:'/',
+				maxAge: 1000* 60*60 *24 * 30 //30 days
+			});
+		}
 		await knex('transactions').insert({
 			id: crypto.randomUUID(),
 			title,
-			amount: type === 'credit' ?  amount : amount * -1,
+			amount: type === 'credit' ? amount : amount * -1,
+			session_id: sessionId
 		});
 		return reply.status(201).send('paozinho de alho');
 		//  201 recurso criado com sucesso
-	})
-	
-	;
+	});
 }
-
-
-
