@@ -27,7 +27,7 @@
         ],
         "quotes": [
             "error",
-            "space"
+            "single"
         ],
         "semi": [
             "error",
